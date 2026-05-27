@@ -5,6 +5,7 @@ import "sort"
 type Shape interface {
 	Contains(lx, ly, lz int16) bool
 	Bounds() (min, max Point)
+	ForEachPoint(fn func(p Point))
 }
 
 // simple shape - parallelepiped
@@ -18,6 +19,16 @@ func (b Box) Contains(lx, ly, lz int16) bool {
 
 func (b Box) Bounds() (min, max Point) {
 	return Point{0, 0, 0}, Point{b.W, b.H, b.D}
+}
+
+func (b Box) ForEachPoint(fn func(p Point)) {
+	for x := int16(0); x < b.W; x++ {
+		for y := int16(0); y < b.H; y++ {
+			for z := int16(0); z < b.D; z++ {
+				fn(Point{x, y, z})
+			}
+		}
+	}
 }
 
 // VoxelShape - specified by list of points
@@ -99,4 +110,10 @@ func (v *VoxelShape) Contains(lx, ly, lz int16) bool {
 
 func (v *VoxelShape) Bounds() (min, max Point) {
 	return v.minBounds, v.maxBounds
+}
+
+func (v *VoxelShape) ForEachPoint(fn func(p Point)) {
+	for _, p := range v.points {
+		fn(p)
+	}
 }
