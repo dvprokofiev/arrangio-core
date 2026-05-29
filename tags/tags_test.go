@@ -49,3 +49,20 @@ func TestMask_Has_Negative(t *testing.T) {
 		t.Error("Mask should not have a bit that was never ever set")
 	}
 }
+
+// this test ensures that branching a Mask via `With()` guarantees
+// data isolation and prevents underlying array aliasing
+func TestMask_Branching(t *testing.T) {
+	baseMask := NewMask().With(70)
+
+	fMask := baseMask.With(80)
+	sMask := baseMask.With(90)
+
+	if !fMask.Has(NewMask().With(80)) {
+		t.Errorf("fMask has lost its tag 80, it has dynamic tags: %v", fMask.DynamicIDs)
+	}
+
+	if !sMask.Has(NewMask().With(90)) {
+		t.Errorf("sMask should contain tag 90, it has dynamic tags: %v", sMask.DynamicIDs)
+	}
+}
