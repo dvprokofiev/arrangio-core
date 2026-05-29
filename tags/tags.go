@@ -61,8 +61,12 @@ func (m Mask) With(tagID int) Mask {
 	// if all elements in m.DynamicIDs are smaller than tagID
 	// or tagID must be inserted in between existent elements
 	if idx == len(m.DynamicIDs) || m.DynamicIDs[idx] != dynID {
-		m.DynamicIDs = append(m.DynamicIDs, 0)
-		copy(m.DynamicIDs[idx+1:], m.DynamicIDs[idx:])
+		// create independent slice to ensure branching works
+		oldDyn := m.DynamicIDs
+		m.DynamicIDs = make([]uint16, len(oldDyn)+1)
+
+		copy(m.DynamicIDs[:idx], oldDyn[:idx])
+		copy(m.DynamicIDs[idx+1:], oldDyn[idx:])
 		m.DynamicIDs[idx] = dynID
 	}
 
