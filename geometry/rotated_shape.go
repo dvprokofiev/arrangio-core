@@ -34,10 +34,6 @@ func (r *RotatedShape) GetRotation() uint8 {
 // *trick*: instead of rotating shape, we rotate the incoming point backward
 // using the inverse matrix and query unrotated base shape
 func (r *RotatedShape) Contains(lx, ly, lz int16) bool {
-	if r.matrixIdx == 0 {
-		return r.underlying.Contains(lx, ly, lz)
-	}
-
 	matrix := rotationMatrices[r.matrixIdx]
 
 	invX := matrix[0][0]*lx + matrix[1][0]*ly + matrix[2][0]*lz
@@ -59,7 +55,7 @@ func (r *RotatedShape) Bounds() (min, max Point) {
 	return transformBounds(minBase, maxBase, matrix)
 }
 
-// iterate over all points of the shape, applying a forward rotation to each 
+// iterate over all points of the shape, applying a forward rotation to each
 func (r *RotatedShape) ForEachPoint(fn func(p Point)) {
 	if r.matrixIdx == 0 {
 		r.underlying.ForEachPoint(fn)

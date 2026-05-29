@@ -72,10 +72,11 @@ func computeRotations() [24]RotationMatrix {
 	}
 
 	// nested loops go through all permutations in two possible directions
+	// going from 1 to -1 in order to `Contains()` method of decorator to be branchless
 	for _, p := range permutations {
-		for _, sx := range []int16{-1, 1} {
-			for _, sy := range []int16{-1, 1} {
-				for _, sz := range []int16{-1, 1} {
+		for _, sx := range []int16{1, -1} {
+			for _, sy := range []int16{1, -1} {
+				for _, sz := range []int16{1, -1} {
 					var m RotationMatrix
 					m[0][p[0]] = sx
 					m[1][p[1]] = sy
