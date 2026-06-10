@@ -59,3 +59,5 @@ jobs:
           fail-on-alert: true
           alert-threshold: "120%"
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          external-data-json-file: "benchmark_history.json"
+          auto-push: false
