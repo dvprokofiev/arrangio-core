@@ -26,3 +26,18 @@ func (f *Footprint) ContainsPoint(wx, wy, wz int64) bool {
 
 	return f.Shape.Contains(lx, ly, lz)
 }
+
+// transform shape's relative local bounds into absolute world's space coordinates
+func (f *Footprint) WorldBounds() (min, max Point64) {
+	localMin, localMax := f.Shape.Bounds()
+
+	return Point64{
+			X: f.Anchor.X + int64(localMin.X),
+			Y: f.Anchor.Y + int64(localMin.Y),
+			Z: f.Anchor.Z + int64(localMin.Z),
+		}, Point64{
+			X: f.Anchor.X + int64(localMax.X),
+			Y: f.Anchor.Y + int64(localMax.Y),
+			Z: f.Anchor.Z + int64(localMax.Z),
+		}
+}
