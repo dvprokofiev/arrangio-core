@@ -22,9 +22,12 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
 
-  test:
+  test-and-benchmark:
     name: Run Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,4 +45,17 @@ jobs:
         run: go build -v ./...
 
       - name: Test with Go CLI
-        run: go test -v ./...
+        run: go test -v -race ./...
+
+      - name: Run Benchmarks
+        run: go test -bench=. -benchmem ./... | tee bench.txt
+
+      - name: Store Benchmark Results
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: "go"
+          output-file-path: "bench.txt"
+          comment-on-alert: true
+          fail-on-alert: true
+          alert-threshold: "120%"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
