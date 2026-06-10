@@ -6,10 +6,11 @@ import (
 )
 
 type Entity struct {
-	ID        uint64
-	Tags      tags.Mask
-	Props     []float64
-	Footprint geometry.Footprint
+	ID          uint64
+	Tags        tags.Mask
+	Props       []float64
+	Footprint   geometry.Footprint
+	LastQueryID uint64
 }
 
 func NewEntity(id uint64, tagMask tags.Mask, props []float64, footprint geometry.Footprint) *Entity {
