@@ -5,17 +5,12 @@ import (
 	"arrangio-core/grid"
 )
 
-type ConstraintType int
-
-const (
-	HardConstraint ConstraintType = iota
-	SoftConstraint
-)
+type RuleContext struct {
+	Grid *grid.Grid
+	// pre-allocated buffer for `QueryBug` method
+	Buffer []*entity.Entity
+}
 
 type Rule interface {
-	Type() ConstraintType
-	// importance of a rule -- from 0 to 1
-	Weight() float64
-	// function that returns basic mathematical value of rule violation
-	Evaluate(g *grid.Grid, target *entity.Entity) float64
+	Evaluate(subject *entity.Entity, ctx *RuleContext) float64
 }
