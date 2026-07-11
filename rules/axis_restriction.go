@@ -20,14 +20,20 @@ type AxisRestrictionRule struct {
 	Ref  int64    // reference value to compare against
 }
 
+const (
+	AxisX int64 = iota
+	AxisY
+	AxisZ
+)
+
 func (r *AxisRestrictionRule) Evaluate(subject *entity.Entity, ctx *RuleContext) float64 {
 	var val int64
 	switch r.Axis {
-	case 'X', 'x':
+	case AxisX:
 		val = subject.Footprint.Anchor.X
-	case 'Y', 'y':
+	case AxisY:
 		val = subject.Footprint.Anchor.Y
-	case 'Z', 'z':
+	case AxisZ:
 		val = subject.Footprint.Anchor.Z
 	default:
 		return 0.0
@@ -57,20 +63,22 @@ func (r *AxisRestrictionRule) Evaluate(subject *entity.Entity, ctx *RuleContext)
 	// provide directional signal to solver, guiding mutation
 	var diff int64
 	switch r.Op {
-	case OpEq, OpNot:
+	case OpEq:
 		if val > r.Ref {
 			diff = val - r.Ref
 		} else {
 			diff = r.Ref - val
 		}
+	case OpNot:
+		return 0.5
 	case OpLt, OpLe:
 		diff = val - r.Ref
 	case OpGt, OpGe:
 		diff = r.Ref - val
+	}
 
-		if diff <= 0 {
-			return 0.0
-		}
+	if diff <= 0 {
+		return 0.0
 	}
 
 	// divide by (diff+1) to protect against division-by-zero errors
