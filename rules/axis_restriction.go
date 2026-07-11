@@ -20,12 +20,6 @@ type AxisRestrictionRule struct {
 	Ref  int64    // reference value to compare against
 }
 
-const (
-	AxisX int64 = iota
-	AxisY
-	AxisZ
-)
-
 func (r *AxisRestrictionRule) Evaluate(subject *entity.Entity, ctx *RuleContext) float64 {
 	var val int64
 	switch r.Axis {

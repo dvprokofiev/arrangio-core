@@ -5,6 +5,13 @@ import (
 	"arrangio-core/grid"
 )
 
+// axis definitions for some rules
+const (
+	AxisX int64 = iota
+	AxisY
+	AxisZ
+)
+
 type RuleContext struct {
 	Grid *grid.Grid
 	// pre-allocated buffer for `QueryBug` method
