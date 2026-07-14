@@ -10,7 +10,7 @@ import (
 
 type AlignmentRule struct {
 	Target Selector
-	Axis   int64
+	Axis   uint8
 	Radius int64 // define search radius for this rule
 }
 

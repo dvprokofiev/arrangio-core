@@ -7,7 +7,7 @@ import (
 
 // axis definitions for some rules
 const (
-	AxisX int64 = iota
+	AxisX uint8 = iota
 	AxisY
 	AxisZ
 )

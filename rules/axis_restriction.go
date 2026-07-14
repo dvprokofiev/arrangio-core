@@ -15,7 +15,7 @@ const (
 )
 
 type AxisRestrictionRule struct {
-	Axis int64    // target axis value ('X', 'Y', 'Z')
+	Axis uint8    // target axis value ('X', 'Y', 'Z')
 	Op   Operator // comparison operator
 	Ref  int64    // reference value to compare against
 }
