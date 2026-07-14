@@ -65,9 +65,13 @@ func (r *AxisRestrictionRule) Evaluate(subject *entity.Entity, ctx *RuleContext)
 		}
 	case OpNot:
 		return 0.5
-	case OpLt, OpLe:
+	case OpLt:
+		diff = val - (r.Ref - 1)
+	case OpLe:
 		diff = val - r.Ref
-	case OpGt, OpGe:
+	case OpGt:
+		diff = (r.Ref + 1) - val
+	case OpGe:
 		diff = r.Ref - val
 	}
 
