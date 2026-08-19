@@ -32,31 +32,66 @@ func CheckCollision(a, b *geometry.Footprint) bool {
 	aAnchorY := a.Anchor.Y
 	aAnchorZ := a.Anchor.Z
 
-	// iterate through first object's points and
-	// try to find them in second object
 	collision := false
-	a.Shape.ForEachPoint(func(p geometry.Point) bool {
-		wx := aAnchorX + int64(p.X)
-		wy := aAnchorY + int64(p.Y)
-		wz := aAnchorZ + int64(p.Z)
 
-		// bounds check
-		if wx >= bMinX && wx < bMaxX &&
-			wy >= bMinY && wy < bMaxY &&
-			wz >= bMinZ && wz < bMaxZ {
+	// Hoist the interface method out of the inner loop
+	// We extract the underlying shape to a direct type if possible, or an interface
+	// if it is not known, reducing interface indirection in the loop where supported.
+	switch bShape := b.Shape.(type) {
+	case geometry.Box:
+		a.Shape.ForEachPoint(func(p geometry.Point) bool {
+			wx := aAnchorX + int64(p.X)
+			wy := aAnchorY + int64(p.Y)
+			wz := aAnchorZ + int64(p.Z)
 
-			lx := int16(diffX + int64(p.X))
-			ly := int16(diffY + int64(p.Y))
-			lz := int16(diffZ + int64(p.Z))
-
-			if b.Shape.Contains(lx, ly, lz) {
-				collision = true
-				return false // early exit
+			if wx >= bMinX && wx < bMaxX && wy >= bMinY && wy < bMaxY && wz >= bMinZ && wz < bMaxZ {
+				lx := int16(diffX + int64(p.X))
+				ly := int16(diffY + int64(p.Y))
+				lz := int16(diffZ + int64(p.Z))
+				if bShape.Contains(lx, ly, lz) {
+					collision = true
+					return false // early exit
+				}
 			}
-		}
+			return true
+		})
+	case *geometry.VoxelShape:
+		a.Shape.ForEachPoint(func(p geometry.Point) bool {
+			wx := aAnchorX + int64(p.X)
+			wy := aAnchorY + int64(p.Y)
+			wz := aAnchorZ + int64(p.Z)
 
-		return true // continue iteration
-	})
+			if wx >= bMinX && wx < bMaxX && wy >= bMinY && wy < bMaxY && wz >= bMinZ && wz < bMaxZ {
+				lx := int16(diffX + int64(p.X))
+				ly := int16(diffY + int64(p.Y))
+				lz := int16(diffZ + int64(p.Z))
+				if bShape.Contains(lx, ly, lz) {
+					collision = true
+					return false // early exit
+				}
+			}
+			return true
+		})
+	default:
+		// Fallback for other shapes
+		bIface := b.Shape
+		a.Shape.ForEachPoint(func(p geometry.Point) bool {
+			wx := aAnchorX + int64(p.X)
+			wy := aAnchorY + int64(p.Y)
+			wz := aAnchorZ + int64(p.Z)
+
+			if wx >= bMinX && wx < bMaxX && wy >= bMinY && wy < bMaxY && wz >= bMinZ && wz < bMaxZ {
+				lx := int16(diffX + int64(p.X))
+				ly := int16(diffY + int64(p.Y))
+				lz := int16(diffZ + int64(p.Z))
+				if bIface.Contains(lx, ly, lz) {
+					collision = true
+					return false // early exit
+				}
+			}
+			return true
+		})
+	}
 
 	return collision
 }
