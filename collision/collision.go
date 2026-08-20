@@ -32,31 +32,82 @@ func CheckCollision(a, b *geometry.Footprint) bool {
 	aAnchorY := a.Anchor.Y
 	aAnchorZ := a.Anchor.Z
 
+	// ⚡ Bolt Optimization: precompute relative bounds for p directly
+	// using int64 bounds to correctly prevent overflow before converting to int16.
+	pMinX_i64 := bMinX - aAnchorX
+	pMaxX_i64 := bMaxX - aAnchorX
+	pMinY_i64 := bMinY - aAnchorY
+	pMaxY_i64 := bMaxY - aAnchorY
+	pMinZ_i64 := bMinZ - aAnchorZ
+	pMaxZ_i64 := bMaxZ - aAnchorZ
+
+	// ⚡ Bolt Optimization: precompute diff components as int16
+	// to avoid inner loop casting overhead.
+	dXi16 := int16(diffX)
+	dYi16 := int16(diffY)
+	dZi16 := int16(diffZ)
+
 	// iterate through first object's points and
 	// try to find them in second object
 	collision := false
-	a.Shape.ForEachPoint(func(p geometry.Point) bool {
-		wx := aAnchorX + int64(p.X)
-		wy := aAnchorY + int64(p.Y)
-		wz := aAnchorZ + int64(p.Z)
 
-		// bounds check
-		if wx >= bMinX && wx < bMaxX &&
-			wy >= bMinY && wy < bMaxY &&
-			wz >= bMinZ && wz < bMaxZ {
+	// ⚡ Bolt Optimization: devirtualize Contains call using type switch
+	// and unswitch the inner loop to prevent method dispatch and closure allocation.
+	switch bShape := b.Shape.(type) {
+	case geometry.Box:
+		a.Shape.ForEachPoint(func(p geometry.Point) bool {
+			// inline bounds check using p directly with int64
+			if int64(p.X) >= pMinX_i64 && int64(p.X) < pMaxX_i64 &&
+				int64(p.Y) >= pMinY_i64 && int64(p.Y) < pMaxY_i64 &&
+				int64(p.Z) >= pMinZ_i64 && int64(p.Z) < pMaxZ_i64 {
 
-			lx := int16(diffX + int64(p.X))
-			ly := int16(diffY + int64(p.Y))
-			lz := int16(diffZ + int64(p.Z))
+				lx := dXi16 + p.X
+				ly := dYi16 + p.Y
+				lz := dZi16 + p.Z
 
-			if b.Shape.Contains(lx, ly, lz) {
-				collision = true
-				return false // early exit
+				// Inline Contains logic for Box for even faster execution
+				if lx >= 0 && lx < bShape.W && ly >= 0 && ly < bShape.H && lz >= 0 && lz < bShape.D {
+					collision = true
+					return false // early exit
+				}
 			}
-		}
+			return true // continue iteration
+		})
+	case *geometry.VoxelShape:
+		a.Shape.ForEachPoint(func(p geometry.Point) bool {
+			if int64(p.X) >= pMinX_i64 && int64(p.X) < pMaxX_i64 &&
+				int64(p.Y) >= pMinY_i64 && int64(p.Y) < pMaxY_i64 &&
+				int64(p.Z) >= pMinZ_i64 && int64(p.Z) < pMaxZ_i64 {
 
-		return true // continue iteration
-	})
+				lx := dXi16 + p.X
+				ly := dYi16 + p.Y
+				lz := dZi16 + p.Z
+
+				if bShape.Contains(lx, ly, lz) {
+					collision = true
+					return false
+				}
+			}
+			return true
+		})
+	default:
+		a.Shape.ForEachPoint(func(p geometry.Point) bool {
+			if int64(p.X) >= pMinX_i64 && int64(p.X) < pMaxX_i64 &&
+				int64(p.Y) >= pMinY_i64 && int64(p.Y) < pMaxY_i64 &&
+				int64(p.Z) >= pMinZ_i64 && int64(p.Z) < pMaxZ_i64 {
+
+				lx := dXi16 + p.X
+				ly := dYi16 + p.Y
+				lz := dZi16 + p.Z
+
+				if b.Shape.Contains(lx, ly, lz) {
+					collision = true
+					return false
+				}
+			}
+			return true
+		})
+	}
 
 	return collision
 }
